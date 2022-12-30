@@ -32,7 +32,7 @@ class Scraper:
             user_agent = get_user_agent()
             options = Options()
             options.add_argument("--no-sandbox")
-            options.add_argument("--headless")
+            # options.add_argument("--headless")
             options.add_argument("--disable-gpu")
             options.add_argument(f"user-agent={user_agent}")
             options.add_argument('--start-maximized')
@@ -167,50 +167,51 @@ class Scraper:
         except:
             pass
 
-        # try:
-        driver.get(url=link)
-        time.sleep(1)
-        top_content = WebDriverWait(driver, 100).until(
-            EC.presence_of_element_located((By.XPATH, '//div[@class="ph5 pb5"]'))
-        )
-        name = top_content.find_element(by=By.TAG_NAME, value="h1").text
-        name = self.__clean_name(name)
-        title = top_content.find_element(
-            by=By.XPATH, value='//div[@class="text-body-medium break-words"]'
-        ).text
-        location = top_content.find_element(
-            by=By.XPATH,
-            value='//span[@class="text-body-small inline t-black--light break-words"]',
-        ).text
-        other_contents = driver.find_elements(
-            by=By.XPATH,
-            value='//section[@class="artdeco-card ember-view relative break-words pb3 mt2 "]',
-        )
-        index = 0
-        for element in other_contents:
-            heading = element.text.split("\n")[0]
-            if heading == "Experience":
-                index = other_contents.index(element) + 1
-                break
-        experience_content = driver.find_element(
-            by=By.XPATH,
-            value=f'//section[@class="artdeco-card ember-view relative break-words pb3 mt2 "][{index}]',
-        )
-        company = experience_content.find_element(by=By.TAG_NAME, value='li').text.split('\n')[2].split(" · ")[0]
-        
-        driver.get(f"{link}/overlay/contact-info/")
-        time.sleep(2)
         try:
+            driver.get(url=link)
+            time.sleep(1)
+            top_content = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.XPATH, '//div[@class="ph5 pb5"]'))
+            )
+            name = top_content.find_element(by=By.TAG_NAME, value="h1").text
+            name = self.__clean_name(name)
+            scraped_jobs["Full Name"] = name
+            title = top_content.find_element(
+                by=By.XPATH, value='//div[@class="text-body-medium break-words"]'
+            ).text
+            scraped_jobs["Job Title"] = title
+            location = top_content.find_element(
+                by=By.XPATH,
+                value='//span[@class="text-body-small inline t-black--light break-words"]',
+            ).text
+            scraped_jobs["Location"] = location
+            other_contents = driver.find_elements(
+                by=By.XPATH,
+                value='//section[@class="artdeco-card ember-view relative break-words pb3 mt2 "]',
+            )
+            index = 0
+            for element in other_contents:
+                heading = element.text.split("\n")[0]
+                if heading == "Experience":
+                    index = other_contents.index(element) + 1
+                    break
+            experience_content = driver.find_element(
+                by=By.XPATH,
+                value=f'//section[@class="artdeco-card ember-view relative break-words pb3 mt2 "][{index}]',
+            )
+            company = experience_content.find_element(by=By.TAG_NAME, value='li').text.split('\n')[2].split(" · ")[0]
+            scraped_jobs["Company"] = company
+        except:
+            pass
+        
+        try:
+            driver.get(f"{link}/overlay/contact-info/")
+            time.sleep(2)
             email = driver.find_element(by=By.XPATH, value='//section[@class="pv-contact-info__contact-type ci-email"]').text
         except NoSuchElementException:
             email = "Email no available on linkedin"
-
-        scraped_jobs["Full Name"] = name
-        scraped_jobs["Job Title"] = title
-        scraped_jobs["Location"] = location
-        scraped_jobs["Company"] = company
-        scraped_jobs["Email Address"] = email
-        
+        if scraped_jobs != {}:
+            scraped_jobs["Email Address"] = email        
         return scraped_jobs
 
 def to_excel(data: List[dict], file_name: str, sheet_name: str):

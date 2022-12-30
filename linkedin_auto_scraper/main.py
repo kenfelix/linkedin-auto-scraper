@@ -58,7 +58,8 @@ def scrape(
             print(links)
             for link in links:
                 info = s.scarpe_link_info(link=link)
-                my_list.append(info)
+                if info not in my_list and info == {}:
+                    my_list.append(info)
         print(my_list)
         if excel:
             name = typer.prompt("What would you like to save the file as?")
