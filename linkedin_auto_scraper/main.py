@@ -1,9 +1,7 @@
 import typer
-import time
-import asyncio
 from rich import print
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from utils.utils import Scraper, to_console, to_excel
+from .utils.utils import Scraper, to_console, to_excel
 from alive_progress import alive_bar
 from typing import ContextManager, Optional
 
