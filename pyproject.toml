@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "linkedin_auto_scraper"}]
 
 [tool.poetry.scripts]
-linkedin-scraper = "linkedin_auto_scraper.main:app"
+takjug-linkedin-scraper = "linkedin_auto_scraper.main:app"
 
 [tool.poetry.dependencies]
 python = "^3.10"
