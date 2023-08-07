@@ -1,11 +1,11 @@
 import json
+import os
 import re
 import time
 from dataclasses import dataclass
 from typing import List, Optional
-import pandas as pd
-import os
 
+import pandas as pd
 from fake_useragent import UserAgent
 from pydantic import EmailStr
 from selenium import webdriver
@@ -14,9 +14,11 @@ from selenium.common.exceptions import (
     StaleElementReferenceException,
 )
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 def get_user_agent():
@@ -35,15 +37,17 @@ class Scraper:
             # options.add_argument("--headless")
             options.add_argument("--disable-gpu")
             options.add_argument(f"user-agent={user_agent}")
-            options.add_argument('--start-maximized')
+            options.add_argument("--start-maximized")
             options.add_experimental_option("excludeSwitches", ["enable-logging"])
             options.add_experimental_option("excludeSwitches", ["enable-automation"])
             options.add_experimental_option("useAutomationExtension", False)
             options.add_experimental_option("detach", True)
-            driver = webdriver.Chrome(options=options)
+            driver = webdriver.Chrome(
+                service=ChromeService(ChromeDriverManager().install()), options=options
+            )
             self.driver = driver
         return self.driver
-    
+
     def quit_driver(self):
         driver = self.__get_driver()
         return driver.quit()
@@ -60,7 +64,7 @@ class Scraper:
             by=By.XPATH, value='//button[@data-litms-control-urn="login-submit"]'
         )
         login_button.click()
-        WebDriverWait(driver, 100).until(
+        WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.ID, "global-nav"))
         )
         with open("cookies.json", "w") as f:
@@ -68,7 +72,7 @@ class Scraper:
         return "Login Successful"
 
     def scrape_linkedin_job_links(
-        self, search_params: str, country_filter_param: Optional[str]=None
+        self, search_params: str, country_filter_param: Optional[str] = None
     ) -> list:
         links: List = []
         driver = self.__get_driver()
@@ -82,12 +86,20 @@ class Scraper:
         )
         time.sleep(2)
         if country_filter_param is not None:
-            all_filters_button = driver.find_element(by=By.XPATH, value='//button[@aria-label="Show all filters. Clicking this button displays all available filter options."]')
+            all_filters_button = driver.find_element(
+                by=By.XPATH,
+                value='//button[@aria-label="Show all filters. Clicking this button displays all available filter options."]',
+            )
             all_filters_button.click()
             time.sleep(1)
-            add_location_button = driver.find_element(by=By.XPATH, value='(//button[@class="artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view reusable-search-filters-advanced-filters__add-filter-button"])[3]')
+            add_location_button = driver.find_element(
+                by=By.XPATH,
+                value='(//button[@class="artdeco-button artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view reusable-search-filters-advanced-filters__add-filter-button"])[3]',
+            )
             add_location_button.click()
-            add_location_input = driver.find_element(by=By.XPATH, value='//input[@aria-label="Add a location"]')
+            add_location_input = driver.find_element(
+                by=By.XPATH, value='//input[@aria-label="Add a location"]'
+            )
             add_location_input.send_keys(country_filter_param)
             try:
                 elements = WebDriverWait(driver, 100).until(
@@ -111,10 +123,13 @@ class Scraper:
                         element.click()
                         break
             time.sleep(1)
-            apply_filter_button = driver.find_element(by=By.XPATH, value="//button[@class='reusable-search-filters-buttons search-reusables__secondary-filters-show-results-button artdeco-button artdeco-button--2 artdeco-button--primary ember-view']")
+            apply_filter_button = driver.find_element(
+                by=By.XPATH,
+                value="//button[@class='reusable-search-filters-buttons search-reusables__secondary-filters-show-results-button artdeco-button artdeco-button--2 artdeco-button--primary ember-view']",
+            )
             apply_filter_button.click()
             time.sleep(3)
-            
+
         try:
             for page in range(1, 101):
                 print(f"collecting the links in page {page}")
@@ -166,10 +181,9 @@ class Scraper:
                 driver.add_cookie(cookie)
         except:
             pass
-
+        driver.get(url=link)
+        time.sleep(1)
         try:
-            driver.get(url=link)
-            time.sleep(1)
             top_content = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.XPATH, '//div[@class="ph5 pb5"]'))
             )
@@ -199,29 +213,38 @@ class Scraper:
                 by=By.XPATH,
                 value=f'//section[@class="artdeco-card ember-view relative break-words pb3 mt2 "][{index}]',
             )
-            company = experience_content.find_element(by=By.TAG_NAME, value='li').text.split('\n')[2].split(" · ")[0]
+            company = (
+                experience_content.find_element(by=By.TAG_NAME, value="li")
+                .text.split("\n")[2]
+                .split(" · ")[0]
+            )
             scraped_jobs["Company"] = company
         except:
             pass
-        
+
         try:
             driver.get(f"{link}/overlay/contact-info/")
             time.sleep(2)
-            email = driver.find_element(by=By.XPATH, value='//section[@class="pv-contact-info__contact-type ci-email"]').text
+            email = driver.find_element(
+                by=By.XPATH,
+                value='//section[@class="pv-contact-info__contact-type ci-email"]',
+            ).text
         except NoSuchElementException:
             email = "Email no available on linkedin"
-        if scraped_jobs != {}:
-            scraped_jobs["Email Address"] = email        
+        if len(scraped_jobs) > 0:
+            scraped_jobs["Email Address"] = email
         return scraped_jobs
+
 
 def to_excel(data: List[dict], file_name: str, sheet_name: str):
     df = pd.DataFrame(data)
     download_folder = os.path.join(os.path.expanduser("~"), "Downloads")
     file_path = os.path.join(download_folder, f"{file_name}.xlsx")
-    writer = pd.ExcelWriter(file_path, engine='xlsxwriter')
+    writer = pd.ExcelWriter(file_path, engine="xlsxwriter")
     df.to_excel(writer, sheet_name=sheet_name, index=False)
     writer.save()
-    
+
+
 def to_console(data: List[dict]):
     df = pd.DataFrame(data)
     return df

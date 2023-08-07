@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "linkedin-auto-scraper"
-version = "0.1.0"
+version = "0.1.8"
 description = ""
 authors = ["kenfelix <Kmrapper.kf@gmail.com>"]
 readme = "README.md"
 packages = [{include = "linkedin_auto_scraper"}]
 
 [tool.poetry.scripts]
-takjug-linkedin-scraper = "linkedin_auto_scraper.main:app"
+linkedin-auto-scraper = "linkedin_auto_scraper.main:app"
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -20,6 +20,7 @@ isort = "^5.11.4"
 alive-progress = "^3.0.0"
 xlsxwriter = "^3.0.4"
 pandas = "^1.5.2"
+webdriver-manager = "^3.8.5"
 
 
 [build-system]
