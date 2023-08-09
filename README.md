@@ -3,6 +3,8 @@
 
 LinkedIn Auto Scraper is a command-line application designed to scrape cleaned information from LinkedIn profiles based on job titles and locations. The app offers two main commands: `login` and `scrape`. Once you've logged in using the `login` command, you can perform continuous scraping without the need to log in again, thanks to the authentication caching feature.
 
+![linkedin-auto-scraper](screenshot.png)
+
 ## Table of Contents
 
 -   [Installation](https://chat.openai.com/c/b42c6a84-5afc-4a4e-a9ae-23be4b649973#installation)
