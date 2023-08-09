@@ -17,6 +17,10 @@ LinkedIn Auto Scraper is a command-line application designed to scrape cleaned i
 ## Installation
 
 1.  Ensure you have Python 3.x installed.
+
+   `pip install linkedin-auto-scraper`
+
+	or
     
 2.  Clone this repository:
 
