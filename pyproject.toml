@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "linkedin-auto-scraper"
-version = "0.1.0"
+version = "0.2.0"
 description = "A tool to scrape infomation of people in a particular based on their job title and location"
 authors = ["kenfelix <Kmrapper.kf@gmail.com>"]
 readme = "README.md"
