@@ -3,9 +3,8 @@ from typing import ContextManager, Optional
 import typer
 from alive_progress import alive_bar
 from rich import print
-from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from .utils.utils import Scraper, to_console, to_excel
+from linkedin_auto_scraper.utils.utils import Scraper, to_console, to_excel
 
 s = Scraper()
 app = typer.Typer()
@@ -32,16 +31,20 @@ def login():
     login to linkedin acount
     """
     email = typer.prompt("Email")
-    password = typer.prompt("Password", hide_input=True, confirmation_prompt=True)
+    password = typer.prompt(
+        "Password", hide_input=True, confirmation_prompt=True
+    )
     try:
         with spinner("Accessing linkedin with your credentials..."):
             login = s.linkedin_login(email=email, password=password)
         if login == "Login Successful":
-            print("you have succesfully login your linkedin account. :fireworks:")
+            print(
+                "you have succesfully login your linkedin account. :fireworks:"
+            )
     except Exception as e:
-        print(e)
+        print(type(e))
         print(
-            "[bold red]alert![/bold red] Please check your network connection and try again!"
+            "[bold red]alert![/bold red] Please check your network connection or credentials validity and try again!"
         )
         s.quit_driver()
     s.quit_driver()
@@ -49,25 +52,31 @@ def login():
 
 @app.command()
 def scrape(
-    search: str = typer.Option("hr", "--search", "-s", help="Search parameter."),
+    search: str = typer.Option(
+        "hr", "--search", "-s", help="Search parameter."
+    ),
     location: str = typer.Option(
         None,
         "--location",
         "-l",
         help="Use it if you want to search a particular location e.g Nigeria",
     ),
-    excel: bool = typer.Option(..., prompt="Would you like to save to excel document?"),
+    excel: bool = typer.Option(
+        ..., prompt="Would you like to save to excel document?"
+    ),
 ):
     """
     Scrape peoples data from the linkedin
     """
     my_list = []
     try:
-        with spinner("Accessing linkedin with your credentials and scrapping data..."):
+        with spinner(
+            "Accessing linkedin with your credentials and scrapping data..."
+        ):
             links = s.scrape_linkedin_job_links(
                 search_params=search, country_filter_param=location
             )
-            print(links)
+
             for link in links:
                 info = s.scarpe_link_info(link=link)
                 if info not in my_list and len(info) > 0:
@@ -90,8 +99,6 @@ def scrape(
 def main(ctx: typer.Context):
     """
     This Software is created by Emeka Okafor.
-
-                            powered by: takjug.tech
     """
     if ctx.invoked_subcommand is None:
         print(

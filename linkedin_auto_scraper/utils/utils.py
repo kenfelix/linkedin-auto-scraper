@@ -22,7 +22,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 def get_user_agent():
-    return UserAgent(verify_ssl=True).random
+    return UserAgent().random
 
 
 @dataclass
@@ -34,16 +34,21 @@ class Scraper:
             user_agent = get_user_agent()
             options = Options()
             options.add_argument("--no-sandbox")
-            # options.add_argument("--headless")
+            options.add_argument("--headless")
             options.add_argument("--disable-gpu")
             options.add_argument(f"user-agent={user_agent}")
             options.add_argument("--start-maximized")
-            options.add_experimental_option("excludeSwitches", ["enable-logging"])
-            options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            options.add_experimental_option(
+                "excludeSwitches", ["enable-logging"]
+            )
+            options.add_experimental_option(
+                "excludeSwitches", ["enable-automation"]
+            )
             options.add_experimental_option("useAutomationExtension", False)
             options.add_experimental_option("detach", True)
             driver = webdriver.Chrome(
-                service=ChromeService(ChromeDriverManager().install()), options=options
+                service=ChromeService(ChromeDriverManager().install()),
+                options=options,
             )
             self.driver = driver
         return self.driver
@@ -61,7 +66,8 @@ class Scraper:
         email_field.send_keys(email)
         password_field.send_keys(password)
         login_button = driver.find_element(
-            by=By.XPATH, value='//button[@data-litms-control-urn="login-submit"]'
+            by=By.XPATH,
+            value='//button[@data-litms-control-urn="login-submit"]',
         )
         login_button.click()
         WebDriverWait(driver, 20).until(
@@ -135,7 +141,10 @@ class Scraper:
                 print(f"collecting the links in page {page}")
                 people_block = WebDriverWait(driver, 100).until(
                     EC.presence_of_element_located(
-                        (By.XPATH, '//main/div[@aria-labelledby="search-srp-prompt"]')
+                        (
+                            By.XPATH,
+                            '//main/div[@aria-labelledby="search-srp-prompt"]',
+                        )
                     )
                 )
                 profile_list = people_block.find_elements(
@@ -143,7 +152,9 @@ class Scraper:
                 )
 
                 for profile in profile_list:
-                    all_links = profile.find_elements(by=By.TAG_NAME, value="a")
+                    all_links = profile.find_elements(
+                        by=By.TAG_NAME, value="a"
+                    )
                     for a in all_links:
                         if (
                             "linkedin.com/in/" in str(a.get_attribute("href"))
@@ -153,10 +164,13 @@ class Scraper:
                         else:
                             pass
 
-                    driver.execute_script("arguments[0].scrollIntoView();", profile)
+                    driver.execute_script(
+                        "arguments[0].scrollIntoView();", profile
+                    )
 
                 driver.find_element(
-                    by=By.XPATH, value=f'//button[@aria-label="Page {page + 1}"]'
+                    by=By.XPATH,
+                    value=f'//button[@aria-label="Page {page + 1}"]',
                 ).click()
                 time.sleep(1)
         except:
@@ -185,13 +199,16 @@ class Scraper:
         time.sleep(1)
         try:
             top_content = WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.XPATH, '//div[@class="ph5 pb5"]'))
+                EC.presence_of_element_located(
+                    (By.XPATH, '//div[@class="ph5 pb5"]')
+                )
             )
             name = top_content.find_element(by=By.TAG_NAME, value="h1").text
             name = self.__clean_name(name)
             scraped_jobs["Full Name"] = name
             title = top_content.find_element(
-                by=By.XPATH, value='//div[@class="text-body-medium break-words"]'
+                by=By.XPATH,
+                value='//div[@class="text-body-medium break-words"]',
             ).text
             scraped_jobs["Job Title"] = title
             location = top_content.find_element(
